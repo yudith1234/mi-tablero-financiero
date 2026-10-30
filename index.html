@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mi Tablero Financiero</title>
+  <style>
+    :root {
+      --bg: #F7F5F0;
+      --surface: #FFFFFF;
+      --ink: #1D2321;
+      --ink-dim: #5B6460;
+      --line: #E4E0D6;
+      --accent: #0F6E63;
+      --accent-ink: #F4FBF9;
+      --good: #2E7D4F;
+      --warn: #B4571B;
+      --bad: #B4271F;
+      --egreso: #B4571B;
+      --ingreso: #0F6E63;
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #131715;
+        --surface: #1B211E;
+        --ink: #EDEFEC;
+        --ink-dim: #9BA59F;
+        --line: #2B332F;
+        --accent: #3FBBA8;
+        --accent-ink: #06211D;
+        --good: #56C27F;
+        --warn: #F0A05C;
+        --bad: #F2746D;
+        --egreso: #F0A05C;
+        --ingreso: #3FBBA8;
+        color-scheme: dark;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #131715;
+      --surface: #1B211E;
+      --ink: #EDEFEC;
+      --ink-dim: #9BA59F;
+      --line: #2B332F;
+      --accent: #3FBBA8;
+      --accent-ink: #06211D;
+      --good: #56C27F;
+      --warn: #F0A05C;
+      --bad: #F2746D;
+      --egreso: #F0A05C;
+      --ingreso: #3FBBA8;
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: "Manrope", sans-serif
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    a {
+      color: var(--accent)
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding-top: 20px;
+      padding-bottom: 96px
+    }
+
+    header.top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px
+    }
+
+    header.top h1 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -.01em
+    }
+
+    header.top .sub {
+      font-size: .78rem;
+      color: var(--ink-dim)
+    }
+
+    .total-card {
+      background: linear-gradient(155deg, var(--accent), color-mix(in srgb, var(--accent) 70%, black));
+      color: var(--accent-ink);
+      border-radius: 18px;
+      padding: 20px 20px 18px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .total-card .label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: .85
+    }
+
+    .total-card .amount {
+      font-size: 2.1rem;
+      font-weight: 800;
+      margin-top: 4px
+    }
+
+    .total-card .amount small {
+      font-size: 1rem;
+      font-weight: 600;
+      opacity: .85
+    }
+
+    .total-card .foot {
+      display: flex;
+      gap: 18px;
+      margin-top: 12px;
+      font-size: .78rem
+    }
+
+    .total-card .foot b {
+      display: block;
+      font-size: .95rem
+    }
+
+    .alerts {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px
+    }
+
+    .alert {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+      border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line));
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: .84rem
+    }
+
+    .alert.bad {
+      background: color-mix(in srgb, var(--bad) 14%, var(--surface));
+      border-color: color-mix(in srgb, var(--bad) 35%, var(--line))
+    }
+
+    .alert .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warn);
+      margin-top: 5px;
+      flex: none
+    }
+
+    .alert.bad .dot {
+      background: var(--bad)
+    }
+
+    .alert b {
+      display: block;
+      margin-bottom: 1px
+    }
+
+    section {
+      margin-bottom: 20px
+    }
+
+    section h2 {
+      font-size: .95rem;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    section h2 .count {
+      font-size: .72rem;
+      color: var(--ink-dim);
+      font-weight: 500
+    }
+
+    .accounts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    @media (max-width:480px) {
+      .accounts {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .acct {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px
+    }
+
+    .acct .nm {
+      font-size: .78rem;
+      color: var(--ink-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .acct .bal {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-top: 2px
+    }
+
+    .acct .bar {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--line);
+      margin-top: 8px;
+      overflow: hidden
+    }
+
+    .acct .bar i {
+      display: block;
+      height: 100%;
+      background: var(--good)
+    }
+
+    .acct.low .bar i {
+      background: var(--warn)
+    }
+
+    .acct .minline {
+      font-size: .68rem;
+      color: var(--ink-dim);
+      margin-top: 4px
+    }
+
+    .badge {
+      font-size: .62rem;
+      padding: 2px 6px;
+      border-radius: 99px;
+      background: color-mix(in srgb, var(--warn) 20%, transparent);
+      color: var(--warn);
+      font-weight: 700
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px
+    }
+
+    .chart-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin-top: 10px;
+      font-size: .78rem
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .legend i {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      display: inline-block
+    }
+
+    .tabs {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      padding: 8px max(16px, env(safe-area-inset-left, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px));
+      display: flex;
+      gap: 4px
+    }
+
+    .tabs button {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--ink-dim);
+      font-size: .68rem;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 2px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit
+    }
+
+    .tabs button.active {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent)
+    }
+
+    .tabs svg {
+      width: 19px;
+      height: 19px
+    }
+
+    .view {
+      display: none
+    }
+
+    .view.active {
+      display: block
+    }
+
+    form.entry {
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .row2 {
+      display: flex;
+      gap: 10px
+    }
+
+    .row2>* {
+      flex: 1;
+      min-width: 0
+    }
+
+    label {
+      font-size: .72rem;
+      color: var(--ink-dim);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 4px
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px 10px;
+      font-size: .88rem;
+      color: var(--ink);
+      font-family: inherit
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px
+    }
+
+    .seg {
+      display: flex;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      overflow: hidden
+    }
+
+    .seg button {
+      flex: 1;
+      padding: 9px 0;
+      background: var(--bg);
+      border: none;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--ink-dim);
+      cursor: pointer;
+      font-family: inherit
+    }
+
+    .seg button.on[data-k="ingreso"] {
+      background: color-mix(in srgb, var(--ingreso) 22%, var(--bg));
+      color: var(--ingreso)
+    }
+
+    .seg button.on[data-k="egreso"] {
+      background: color-mix(in srgb, var(--egreso) 22%, var(--bg));
+      color: var(--egreso)
+    }
+
+    .btn {
+      background: var(--accent);
+      color: var(--accent-ink);
+      border: none;
+      border-radius: 9px;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: .86rem;
+      cursor: pointer;
+      font-family: inherit
+    }
+
+    .btn.ghost {
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--ink)
+    }
+
+    .btn.sm {
+      padding: 6px 10px;
+      font-size: .76rem;
+      border-radius: 7px
+    }
+
+    .btn:disabled {
+      opacity: .5;
+      cursor: default
+    }
+
+    .tx-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line)
+    }
+
+    .tx {
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px
+    }
+
+    .tx .ic {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      background: color-mix(in srgb, var(--ink-dim) 12%, transparent);
+      font-size: .9rem
+    }
+
+    .tx .meta {
+      flex: 1;
+      min-width: 0
+    }
+
+    .tx .meta .t1 {
+      font-size: .86rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .tx .meta .t2 {
+      font-size: .72rem;
+      color: var(--ink-dim)
+    }
+
+    .tx .amt {
+      font-weight: 700;
+      font-size: .9rem;
+      flex: none
+    }
+
+    .tx .amt.ingreso {
+      color: var(--ingreso)
+    }
+
+    .tx .amt.egreso {
+      color: var(--egreso)
+    }
+
+    .tx .del {
+      background: none;
+      border: none;
+      color: var(--ink-dim);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 4px;
+      flex: none
+    }
+
+    .sched {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px
+    }
+
+    .sched .meta {
+      flex: 1;
+      min-width: 0
+    }
+
+    .sched .meta .t1 {
+      font-weight: 700;
+      font-size: .88rem
+    }
+
+    .sched .meta .t2 {
+      font-size: .74rem;
+      color: var(--ink-dim)
+    }
+
+    .sched.due {
+      border-color: color-mix(in srgb, var(--warn) 45%, var(--line));
+      background: color-mix(in srgb, var(--warn) 8%, var(--surface))
+    }
+
+    .sched.paid {
+      opacity: .55
+    }
+
+    .inv-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px
+    }
+
+    .inv-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px
+    }
+
+    .inv-head .nm {
+      font-weight: 800;
+      font-size: 1rem
+    }
+
+    .inv-stats {
+      display: flex;
+      gap: 16px;
+      margin: 8px 0
+    }
+
+    .inv-stats div b {
+      display: block;
+      font-size: 1rem
+    }
+
+    .inv-stats div span {
+      font-size: .7rem;
+      color: var(--ink-dim)
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--line);
+      overflow: hidden
+    }
+
+    .progress i {
+      display: block;
+      height: 100%;
+      background: var(--accent)
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--ink-dim);
+      font-size: .84rem;
+      padding: 28px 10px
+    }
+
+    .hint {
+      font-size: .72rem;
+      color: var(--ink-dim);
+      margin-top: 6px;
+      line-height: 1.4
+    }
+
+    dialog {
+      border: none;
+      border-radius: 16px;
+      padding: 0;
+      background: var(--surface);
+      color: var(--ink);
+      max-width: 420px;
+      width: 92vw
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, .45)
+    }
+
+    dialog .dbody {
+      padding: 18px
+    }
+
+    dialog h3 {
+      margin: 0 0 12px
+    }
+
+    .closebar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px
+    }
+
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center
+    }
+
+    .login-screen h1 {
+      font-size: 1.4rem
+    }
+
+    .login-screen p {
+      color: var(--ink-dim);
+      font-size: .88rem;
+      max-width: 280px
+    }
+
+    #connStatus {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      font-size: .68rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: 4px 12px;
+      color: var(--ink-dim)
+    }
+  </style>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+</head>
+
+<body>
+
+  <div id="connStatus" hidden>Conectando…</div>
+
+  <div class="login-screen" id="loginScreen">
+    <h1>Mi Tablero Financiero</h1>
+    <p>Entra con tu cuenta de Google para ver y registrar tus movimientos. Solo tú puedes ver estos datos.</p>
+    <button class="btn" id="loginBtn">Entrar con Google</button>
+  </div>
+
+  <div class="wrap" id="app" hidden>
+    <header class="top">
+      <h1>Mi Tablero Financiero</h1>
+      <div class="sub" id="todayLabel"></div>
+    </header>
+
+    <div class="total-card">
+      <div class="label">Saldo total disponible</div>
+      <div class="amount" id="totalAmt">S/ 0.00</div>
+      <div class="foot">
+        <div><b class="mono" id="footIn">S/ 0</b>Ingresos del mes</div>
+        <div><b class="mono" id="footOut">S/ 0</b>Gastos del mes</div>
+        <div><b class="mono" id="footNet">S/ 0</b>Neto del mes</div>
+      </div>
+    </div>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="view active" id="view-resumen">
+      <section>
+        <h2>Cuentas</h2>
+        <div class="accounts" id="accounts"></div>
+      </section>
+      <section>
+        <h2>Gastos por categoría <span class="count" id="monthLabel"></span></h2>
+        <div class="card chart-wrap">
+          <svg id="chart" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="legend" id="legend"></div>
+        </div>
+      </section>
+      <section>
+        <h2>Últimos movimientos</h2>
+        <div class="tx-list" id="recentTx"></div>
+      </section>
+    </div>
+
+    <div class="view" id="view-mov">
+      <section>
+        <h2>Nuevo movimiento</h2>
+        <div class="card">
+          <form class="entry" id="txForm">
+            <div class="seg" id="txType">
+              <button type="button" class="on" data-k="egreso">Gasto</button>
+              <button type="button" data-k="ingreso">Ingreso</button>
+            </div>
+            <div class="row2">
+              <div><label>Monto (S/)</label><input required type="number" step="0.01" min="0" id="txAmt"
+                  placeholder="0.00"></div>
+              <div><label>Fecha</label><input required type="date" id="txDate"></div>
+            </div>
+            <div class="row2">
+              <div><label>Cuenta</label><select id="txAcct"></select></div>
+              <div><label>Categoría</label><select id="txCat"></select></div>
+            </div>
+            <div><label>Nota (opcional)</label><input type="text" id="txNote" placeholder="ej. pasaje a la universidad">
+            </div>
+            <button class="btn" type="submit">Guardar movimiento</button>
+          </form>
+        </div>
+      </section>
+      <section>
+        <h2>Historial <span class="count" id="txCount"></span></h2>
+        <div class="tx-list" id="allTx"></div>
+      </section>
+    </div>
+
+    <div class="view" id="view-sched">
+      <section>
+        <h2>Pagos y aportes programados</h2>
+        <p class="hint">Cosas que se repiten cada mes: mantener el saldo mínimo de Compartamos, un envío fijo a tus
+          papás, etc. Te avisamos cuando se acerca la fecha.</p>
+        <div id="schedList"></div>
+        <button class="btn ghost" id="addSchedBtn" style="margin-top:8px">+ Agregar programado</button>
+      </section>
+    </div>
+
+    <div class="view" id="view-inv">
+      <section>
+        <h2>Emprendimiento (chiclera y otros)</h2>
+        <p class="hint">Registra lo que inviertes y lo que te va generando. Así sabes en cuántas semanas se recupera.
+        </p>
+        <div id="invList"></div>
+        <button class="btn ghost" id="addInvBtn" style="margin-top:4px">+ Nueva inversión</button>
+      </section>
+    </div>
+
+    <button class="btn ghost sm" id="logoutBtn" style="margin-top:4px">Cerrar sesión</button>
+  </div>
+
+  <nav class="tabs" id="tabsNav" hidden>
+    <button class="tab-btn active" data-v="resumen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="12" width="4" height="8" />
+        <rect x="10" y="7" width="4" height="13" />
+        <rect x="17" y="3" width="4" height="17" />
+      </svg>
+      Resumen
+    </button>
+    <button class="tab-btn" data-v="mov">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Movimientos
+    </button>
+    <button class="tab-btn" data-v="sched">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M8 2v4M16 2v4M3 10h18" />
+      </svg>
+      Programados
+    </button>
+    <button class="tab-btn" data-v="inv">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 17l6-6 4 4 7-8" />
+      </svg>
+      Emprende
+    </button>
+  </nav>
+
+  <dialog id="modal">
+    <div class="dbody" id="modalBody"></div>
+  </dialog>
+
+  <!-- ============================================================
+     CONFIGURACIÓN DE FIREBASE
+     Reemplaza este objeto con el que te da tu propio proyecto en
+     https://console.firebase.google.com → Configuración del proyecto
+     → tus apps → config del SDK. No es secreto (va en el navegador),
+     pero la seguridad real la dan las reglas de Firestore (firestore.rules).
+     ============================================================ -->
+  <script>
+    window.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDfiFbZ9F3sfY5QyFckcmPV3S9w0r_M4Ao",
+      authDomain: "mi-tablero-financiero-ea633.firebaseapp.com",
+      projectId: "mi-tablero-financiero-ea633",
+      storageBucket: "mi-tablero-financiero-ea633.firebasestorage.app",
+      messagingSenderId: "T23790625158",
+      appId: "T1:23790625158:web:bc067f6e6d9a0099854c07",
+      measurementId: "G-2B5TS5GG9S"
+    };
+  </script>
+
+  <script type="module">
+    import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, addDoc,
+      onSnapshot, query
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    var app = initializeApp(window.FIREBASE_CONFIG);
+    var auth = getAuth(app);
+    var fdb = getFirestore(app);
+    var unsubs = [];
+    var uid = null;
+
+    var CATS = ["Comida", "Transporte", "Educación", "Familia", "Emprendimiento", "Salud", "Otros"];
+    var CAT_COLORS = {
+      "Comida": "#E07A3F", "Transporte": "#4C8FBD", "Educación": "#8A63C9", "Familia": "#D1577B",
+      "Emprendimiento": "#2FA18C", "Salud": "#C9A23B", "Otros": "#8B8F8A"
+    };
+    var fmtMoney = function (n, cur) {
+      cur = cur || "S/"; var v = Math.round((n || 0) * 100) / 100;
+      return cur + " " + v.toLocaleString("es-PE", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    };
+    var todayISO = function () {var d = new Date(); return d.toISOString().slice(0, 10);};
+    var monthKey = function (iso) {return (iso || todayISO()).slice(0, 7);};
+    var daysUntil = function (day) {
+      var now = new Date(); var y = now.getFullYear(), m = now.getMonth();
+      var target = new Date(y, m, day);
+      if (target < new Date(y, m, now.getDate())) target = new Date(y, m + 1, day);
+      return Math.round((target - new Date(y, m, now.getDate())) / 86400000);
+    };
+
+    document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("es-PE", {day: "numeric", month: "long"});
+    document.getElementById("txDate").value = todayISO();
+
+    var state = {accounts: [], tx: [], sched: [], inv: []};
+
+    function renderCatSelect() {
+      var sel = document.getElementById("txCat");
+      sel.innerHTML = CATS.map(function (c) {return '<option value="' + c + '">' + c + '</option>';}).join("");
+    }
+    renderCatSelect();
+
+    function renderAcctSelects() {
+      var opts = state.accounts.map(function (a) {return '<option value="' + a.id + '">' + a.name + '</option>';}).join("");
+      document.getElementById("txAcct").innerHTML = opts;
+    }
+    function accountById(id) {for (var i = 0; i < state.accounts.length; i++) if (state.accounts[i].id === id) return state.accounts[i]; return null;}
+
+    function renderTotals() {
+      var totalPEN = 0;
+      state.accounts.forEach(function (a) {if (a.currency !== "USD") totalPEN += (a.balance || 0);});
+      var usdTotal = state.accounts.filter(function (a) {return a.currency === "USD";}).reduce(function (s, a) {return s + (a.balance || 0);}, 0);
+      document.getElementById("totalAmt").innerHTML = fmtMoney(totalPEN) + (usdTotal ? ' <small>+ US$ ' + usdTotal.toFixed(2) + '</small>' : '');
+      var mk = monthKey();
+      var monthTx = state.tx.filter(function (t) {return monthKey(t.date) === mk;});
+      var inSum = monthTx.filter(function (t) {return t.type === "ingreso";}).reduce(function (s, t) {return s + t.amount;}, 0);
+      var outSum = monthTx.filter(function (t) {return t.type === "egreso";}).reduce(function (s, t) {return s + t.amount;}, 0);
+      document.getElementById("footIn").textContent = fmtMoney(inSum);
+      document.getElementById("footOut").textContent = fmtMoney(outSum);
+      document.getElementById("footNet").textContent = fmtMoney(inSum - outSum);
+    }
+
+    function renderAccounts() {
+      var el = document.getElementById("accounts");
+      if (!state.accounts.length) {el.innerHTML = '<div class="empty">Aún no hay cuentas. Agrega una desde Firestore o adapta el formulario.</div>'; return;}
+      el.innerHTML = state.accounts.map(function (a) {
+        var min = a.minBalance || 0;
+        var pct = min > 0 ? Math.max(0, Math.min(100, (a.balance / min) * 100)) : 100;
+        var low = min > 0 && a.balance < min;
+        var cur = a.currency === "USD" ? "US$" : "S/";
+        return '<div class="acct ' + (low ? 'low' : '') + '">' +
+          '<div class="nm">' + a.name + (low ? '<span class="badge">Bajo mínimo</span>' : '') + '</div>' +
+          '<div class="bal mono">' + cur + ' ' + (a.balance || 0).toFixed(2) + '</div>' +
+          (min > 0 ? '<div class="bar"><i style="width:' + pct + '%"></i></div><div class="minline">Mínimo ' + cur + ' ' + min.toFixed(0) + ' para evitar comisión</div>' : '') +
+          '</div>';
+      }).join("");
+    }
+
+    function renderAlerts() {
+      var alerts = [];
+      state.accounts.forEach(function (a) {
+        if (a.minBalance && a.balance < a.minBalance) {
+          var cur = a.currency === "USD" ? "US$" : "S/";
+          alerts.push({bad: a.balance < a.minBalance * 0.5, html: '<b>' + a.name + ' por debajo del mínimo</b>Tiene ' + cur + ' ' + a.balance.toFixed(2) + ', necesita ' + cur + ' ' + a.minBalance.toFixed(0) + ' para no pagar comisión de mantenimiento.'});
+        }
+      });
+      state.sched.forEach(function (s) {
+        var mk = monthKey();
+        if (s.lastPaidMonth === mk) return;
+        var d = daysUntil(s.dueDay);
+        if (d <= 7) {alerts.push({bad: d <= 1, html: '<b>' + s.name + ' vence pronto</b>' + (d <= 0 ? 'Vence hoy' : 'En ' + d + ' día' + (d === 1 ? '' : 's')) + ' · S/ ' + s.amount.toFixed(2)});}
+      });
+      var el = document.getElementById("alerts");
+      el.innerHTML = alerts.length ? alerts.map(function (a) {return '<div class="alert ' + (a.bad ? 'bad' : '') + '"><span class="dot"></span><div>' + a.html + '</div></div>';}).join("") : "";
+    }
+
+    function renderChart() {
+      var mk = monthKey();
+      var monthOut = state.tx.filter(function (t) {return t.type === "egreso" && monthKey(t.date) === mk;});
+      document.getElementById("monthLabel").textContent = new Date().toLocaleDateString("es-PE", {month: "long"});
+      var byCat = {};
+      monthOut.forEach(function (t) {byCat[t.category] = (byCat[t.category] || 0) + t.amount;});
+      var cats = Object.keys(byCat).sort(function (a, b) {return byCat[b] - byCat[a];});
+      var svg = document.getElementById("chart");
+      var legend = document.getElementById("legend");
+      if (!cats.length) {
+        svg.innerHTML = '<text x="160" y="95" text-anchor="middle" fill="var(--ink-dim)" font-size="11">Sin gastos registrados este mes</text>';
+        legend.innerHTML = ""; return;
+      }
+      var max = Math.max.apply(null, cats.map(function (c) {return byCat[c];}));
+      var W = 320, H = 180, padL = 4, padR = 4, padT = 10, padB = 24, bw = (W - padL - padR) / cats.length;
+      svg.innerHTML = cats.map(function (c, i) {
+        var h = Math.round((byCat[c] / max) * (H - padT - padB));
+        var x = padL + i * bw + bw * 0.18, w = bw * 0.64, y = H - padB - h;
+        var color = CAT_COLORS[c] || "#888";
+        return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" fill="' + color + '"></rect>' +
+          '<text x="' + (x + w / 2) + '" y="' + (y - 5) + '" text-anchor="middle" font-size="9" fill="var(--ink)" class="mono">' + Math.round(byCat[c]) + '</text>' +
+          '<text x="' + (x + w / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="8" fill="var(--ink-dim)">' + c.slice(0, 6) + '</text>';
+      }).join("");
+      legend.innerHTML = cats.map(function (c) {return '<span><i style="background:' + (CAT_COLORS[c] || "#888") + '"></i>' + c + ' · ' + fmtMoney(byCat[c]) + '</span>';}).join("");
+    }
+
+    function txRow(t, allowDel) {
+      var a = accountById(t.accountId);
+      var icon = t.type === "ingreso" ? "↑" : "↓";
+      return '<div class="tx" data-id="' + t.id + '">' +
+        '<div class="ic">' + icon + '</div>' +
+        '<div class="meta"><div class="t1">' + (t.note || t.category) + '</div><div class="t2">' + t.category + ' · ' + (a ? a.name : "") + ' · ' + t.date + '</div></div>' +
+        '<div class="amt ' + t.type + '">' + (t.type === "ingreso" ? "+" : "-") + fmtMoney(t.amount) + '</div>' +
+        (allowDel ? '<button class="del" data-del="' + t.id + '" title="Eliminar">✕</button>' : '') +
+        '</div>';
+    }
+
+    function renderTx() {
+      var sorted = state.tx.slice().sort(function (a, b) {return (b.date + b.createdAt) > (a.date + a.createdAt) ? 1 : -1;});
+      var recent = sorted.slice(0, 6);
+      document.getElementById("recentTx").innerHTML = recent.length ? recent.map(function (t) {return txRow(t, false);}).join("") : '<div class="empty">Aún no registras movimientos.</div>';
+      document.getElementById("allTx").innerHTML = sorted.length ? sorted.map(function (t) {return txRow(t, true);}).join("") : '<div class="empty">Aún no registras movimientos. Usa el formulario de arriba.</div>';
+      document.getElementById("txCount").textContent = sorted.length ? sorted.length + " movimientos" : "";
+    }
+
+    function renderSched() {
+      var el = document.getElementById("schedList");
+      if (!state.sched.length) {el.innerHTML = '<div class="empty">No tienes pagos programados.</div>'; return;}
+      var mk = monthKey();
+      el.innerHTML = state.sched.map(function (s) {
+        var paid = s.lastPaidMonth === mk;
+        var d = daysUntil(s.dueDay);
+        var due = !paid && d <= 7;
+        return '<div class="sched ' + (due ? 'due' : '') + ' ' + (paid ? 'paid' : '') + '">' +
+          '<div class="meta"><div class="t1">' + s.name + '</div><div class="t2">Día ' + s.dueDay + ' de cada mes · ' + fmtMoney(s.amount) + (paid ? ' · pagado este mes' : '') + '</div></div>' +
+          (paid ? '<button class="btn sm ghost" data-unpay="' + s.id + '">Deshacer</button>' : '<button class="btn sm" data-pay="' + s.id + '">Marcar pagado</button>') +
+          '<button class="del" data-delsched="' + s.id + '" title="Eliminar">✕</button>' +
+          '</div>';
+      }).join("");
+    }
+
+    function renderInv() {
+      var el = document.getElementById("invList");
+      if (!state.inv.length) {el.innerHTML = '<div class="empty">No tienes inversiones registradas todavía.</div>'; return;}
+      el.innerHTML = state.inv.map(function (v) {
+        var entries = v.entries || [];
+        var revenue = entries.reduce(function (s, e) {return s + e.amount;}, 0);
+        var pct = v.invested > 0 ? Math.min(100, (revenue / v.invested) * 100) : 0;
+        var roi = v.invested > 0 ? (((revenue - v.invested) / v.invested) * 100) : 0;
+        return '<div class="inv-card">' +
+          '<div class="inv-head"><div class="nm">' + v.name + '</div><button class="del" data-delinv="' + v.id + '">✕</button></div>' +
+          '<div class="inv-stats">' +
+          '<div><b class="mono">' + fmtMoney(v.invested) + '</b><span>Invertido</span></div>' +
+          '<div><b class="mono">' + fmtMoney(revenue) + '</b><span>Generado</span></div>' +
+          '<div><b class="mono" style="color:' + (roi >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + roi.toFixed(0) + '%</b><span>ROI</span></div>' +
+          '</div>' +
+          '<div class="progress"><i style="width:' + pct + '%"></i></div>' +
+          '<div class="hint">' + (pct >= 100 ? 'Ya se recuperó la inversión.' : 'Recuperado ' + pct.toFixed(0) + '% de lo invertido.') + '</div>' +
+          '<button class="btn ghost sm" style="margin-top:10px" data-addrev="' + v.id + '">+ Registrar ingreso</button>' +
+          '</div>';
+      }).join("");
+    }
+
+    function renderAll() {renderAcctSelects(); renderAccounts(); renderTotals(); renderAlerts(); renderChart(); renderTx(); renderSched(); renderInv();}
+
+    document.querySelectorAll(".tab-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".tab-btn").forEach(function (b) {b.classList.remove("active");});
+        document.querySelectorAll(".view").forEach(function (v) {v.classList.remove("active");});
+        btn.classList.add("active");
+        document.getElementById("view-" + btn.dataset.v).classList.add("active");
+      });
+    });
+
+    document.getElementById("txType").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      document.querySelectorAll("#txType button").forEach(function (x) {x.classList.remove("on");});
+      b.classList.add("on");
+    });
+    function currentTxType() {return document.querySelector("#txType button.on").dataset.k;}
+
+    function openModal(html) {document.getElementById("modalBody").innerHTML = html; document.getElementById("modal").showModal();}
+    function closeModal() {document.getElementById("modal").close();}
+
+    document.getElementById("addSchedBtn").addEventListener("click", function () {
+      var acctOpts = state.accounts.map(function (a) {return '<option value="' + a.id + '">' + a.name + '</option>';}).join("");
+      openModal('<h3>Nuevo pago programado</h3><form class="entry" id="schedForm">' +
+        '<div><label>Nombre</label><input required id="sName" placeholder="ej. Mantener mínimo Compartamos"></div>' +
+        '<div class="row2"><div><label>Monto (S/)</label><input required type="number" step="0.01" min="0" id="sAmt"></div>' +
+        '<div><label>Día del mes</label><input required type="number" min="1" max="31" id="sDay" value="1"></div></div>' +
+        '<div><label>Cuenta</label><select id="sAcct">' + acctOpts + '</select></div>' +
+        '<div class="closebar"><button type="button" class="btn ghost" id="sCancel">Cancelar</button><button class="btn" type="submit">Guardar</button></div></form>');
+      document.getElementById("sCancel").addEventListener("click", closeModal);
+      document.getElementById("schedForm").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var d = {
+          name: document.getElementById("sName").value.trim(), amount: parseFloat(document.getElementById("sAmt").value),
+          dueDay: parseInt(document.getElementById("sDay").value, 10), accountId: document.getElementById("sAcct").value, lastPaidMonth: null
+        };
+        if (!d.name || !d.amount) return;
+        addSched(d); closeModal();
+      });
+    });
+
+    document.getElementById("addInvBtn").addEventListener("click", function () {
+      openModal('<h3>Nueva inversión</h3><form class="entry" id="invForm">' +
+        '<div><label>Nombre</label><input required id="iName" placeholder="ej. Chiclera redonda Glazer"></div>' +
+        '<div><label>Monto invertido (S/)</label><input required type="number" step="0.01" min="0" id="iAmt"></div>' +
+        '<div class="closebar"><button type="button" class="btn ghost" id="iCancel">Cancelar</button><button class="btn" type="submit">Guardar</button></div></form>');
+      document.getElementById("iCancel").addEventListener("click", closeModal);
+      document.getElementById("invForm").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var d = {name: document.getElementById("iName").value.trim(), invested: parseFloat(document.getElementById("iAmt").value), entries: []};
+        if (!d.name || !d.invested) return;
+        addInv(d); closeModal();
+      });
+    });
+
+    document.getElementById("invList").addEventListener("click", function (e) {
+      var addBtn = e.target.closest("[data-addrev]");
+      if (addBtn) {
+        var id = addBtn.dataset.addrev;
+        openModal('<h3>Registrar ingreso</h3><form class="entry" id="revForm">' +
+          '<div class="row2"><div><label>Monto (S/)</label><input required type="number" step="0.01" min="0" id="rAmt"></div>' +
+          '<div><label>Fecha</label><input required type="date" id="rDate" value="' + todayISO() + '"></div></div>' +
+          '<div><label>Nota (opcional)</label><input id="rNote" placeholder="ej. venta del domingo"></div>' +
+          '<div class="closebar"><button type="button" class="btn ghost" id="rCancel">Cancelar</button><button class="btn" type="submit">Guardar</button></div></form>');
+        document.getElementById("rCancel").addEventListener("click", closeModal);
+        document.getElementById("revForm").addEventListener("submit", function (ev) {
+          ev.preventDefault();
+          var amt = parseFloat(document.getElementById("rAmt").value);
+          if (!amt) return;
+          addInvRevenue(id, {date: document.getElementById("rDate").value, amount: amt, note: document.getElementById("rNote").value.trim()});
+          closeModal();
+        });
+        return;
+      }
+      var del = e.target.closest("[data-delinv]");
+      if (del) {deleteInv(del.dataset.delinv);}
+    });
+
+    document.getElementById("schedList").addEventListener("click", function (e) {
+      var pay = e.target.closest("[data-pay]"); if (pay) {markPaid(pay.dataset.pay, true); return;}
+      var unpay = e.target.closest("[data-unpay]"); if (unpay) {markPaid(unpay.dataset.unpay, false); return;}
+      var del = e.target.closest("[data-delsched]"); if (del) {deleteSched(del.dataset.delsched);}
+    });
+
+    ["recentTx", "allTx"].forEach(function (id) {
+      document.getElementById(id).addEventListener("click", function (e) {
+        var del = e.target.closest("[data-del]");
+        if (del) deleteTx(del.dataset.del);
+      });
+    });
+
+    document.getElementById("txForm").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var amt = parseFloat(document.getElementById("txAmt").value);
+      if (!amt || amt <= 0) return;
+      var d = {
+        type: currentTxType(), amount: amt, date: document.getElementById("txDate").value || todayISO(),
+        accountId: document.getElementById("txAcct").value, category: document.getElementById("txCat").value,
+        note: document.getElementById("txNote").value.trim(), createdAt: Date.now()
+      };
+      addTx(d);
+      document.getElementById("txForm").reset();
+      document.getElementById("txDate").value = todayISO();
+      document.querySelectorAll("#txType button").forEach(function (x) {x.classList.remove("on");});
+      document.querySelector('#txType button[data-k="egreso"]').classList.add("on");
+    });
+
+    /* ============== Firestore wiring ==============
+       Estructura: users/{uid}/accounts, users/{uid}/transactions,
+       users/{uid}/scheduled, users/{uid}/investments — cada quien ve
+       y escribe solo lo que está bajo su propio uid (ver firestore.rules). */
+    function userCol(name) {return collection(fdb, "users/" + uid + "/" + name);}
+
+    function addTx(d) {
+      addDoc(userCol("transactions"), d).then(function (ref) {
+        var a = accountById(d.accountId); if (!a) return;
+        var newBal = a.balance + (d.type === "ingreso" ? d.amount : -d.amount);
+        return updateDoc(doc(fdb, "users/" + uid + "/accounts/" + a.id), {balance: newBal});
+      });
+    }
+    function deleteTx(id) {
+      var t = state.tx.find(function (x) {return x.id === id;}); if (!t) return;
+      deleteDoc(doc(fdb, "users/" + uid + "/transactions/" + id)).then(function () {
+        var a = accountById(t.accountId); if (!a) return;
+        var newBal = a.balance - (t.type === "ingreso" ? t.amount : -t.amount);
+        return updateDoc(doc(fdb, "users/" + uid + "/accounts/" + a.id), {balance: newBal});
+      });
+    }
+    function addSched(d) {addDoc(userCol("scheduled"), d);}
+    function deleteSched(id) {deleteDoc(doc(fdb, "users/" + uid + "/scheduled/" + id));}
+    function markPaid(id, paid) {
+      var s = state.sched.find(function (x) {return x.id === id;}); if (!s) return;
+      var mk = paid ? monthKey() : null;
+      if (paid) {addTx({type: "egreso", amount: s.amount, date: todayISO(), accountId: s.accountId, category: "Otros", note: s.name, createdAt: Date.now()});}
+      updateDoc(doc(fdb, "users/" + uid + "/scheduled/" + id), {lastPaidMonth: mk});
+    }
+    function addInv(d) {addDoc(userCol("investments"), d);}
+    function deleteInv(id) {deleteDoc(doc(fdb, "users/" + uid + "/investments/" + id));}
+    function addInvRevenue(id, entry) {
+      var v = state.inv.find(function (x) {return x.id === id;}); if (!v) return;
+      var entries = (v.entries || []).concat([entry]);
+      updateDoc(doc(fdb, "users/" + uid + "/investments/" + id), {entries: entries});
+    }
+
+    function seedDefaultAccounts() {
+      var defaults = [
+        {id: "cuenta_1", name: "Mi cuenta principal", currency: "PEN", balance: 0, minBalance: 0},
+        {id: "cuenta_2", name: "Mi ahorro", currency: "PEN", balance: 0, minBalance: 300}
+      ];
+      return Promise.all(defaults.map(function (a) {
+        return setDoc(doc(fdb, "users/" + uid + "/accounts/" + a.id), a);
+      }));
+    }
+
+    function wireSnapshots() {
+      unsubs.forEach(function (u) {u();}); unsubs = [];
+      unsubs.push(onSnapshot(userCol("accounts"), function (snap) {
+        state.accounts = snap.docs.map(function (d) {return Object.assign({id: d.id}, d.data());});
+        if (!state.accounts.length) {seedDefaultAccounts();}
+        renderAll();
+      }));
+      unsubs.push(onSnapshot(userCol("transactions"), function (snap) {
+        state.tx = snap.docs.map(function (d) {return Object.assign({id: d.id}, d.data());}); renderAll();
+      }));
+      unsubs.push(onSnapshot(userCol("scheduled"), function (snap) {
+        state.sched = snap.docs.map(function (d) {return Object.assign({id: d.id}, d.data());}); renderAll();
+      }));
+      unsubs.push(onSnapshot(userCol("investments"), function (snap) {
+        state.inv = snap.docs.map(function (d) {return Object.assign({id: d.id}, d.data());}); renderAll();
+      }));
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", function () {
+      signInWithPopup(auth, new GoogleAuthProvider()).catch(function (e) {alert("No se pudo iniciar sesión: " + e.message);});
+    });
+    document.getElementById("logoutBtn").addEventListener("click", function () {signOut(auth);});
+
+    onAuthStateChanged(auth, function (user) {
+      if (user) {
+        uid = user.uid;
+        document.getElementById("loginScreen").hidden = true;
+        document.getElementById("app").hidden = false;
+        document.getElementById("tabsNav").hidden = false;
+        wireSnapshots();
+      } else {
+        uid = null;
+        unsubs.forEach(function (u) {u();}); unsubs = [];
+        document.getElementById("loginScreen").hidden = false;
+        document.getElementById("app").hidden = true;
+        document.getElementById("tabsNav").hidden = true;
+      }
+    });
+  </script>
+</body>
+
+</html>
